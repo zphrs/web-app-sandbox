@@ -1,0 +1,176 @@
+if (!self.define) {
+  let s,
+    e = {}
+  const l = (l, i) => (
+    (l = new URL(l + ".js", i).href),
+    e[l] ||
+      new Promise(e => {
+        if ("document" in self) {
+          const s = document.createElement("script")
+          ;(s.src = l), (s.onload = e), document.head.appendChild(s)
+        } else (s = l), importScripts(l), e()
+      }).then(() => {
+        let s = e[l]
+        if (!s) throw new Error(`Module ${l} didn’t register its module`)
+        return s
+      })
+  )
+  self.define = (i, n) => {
+    const r =
+      s ||
+      ("document" in self ? document.currentScript.src : "") ||
+      location.href
+    if (e[r]) return
+    let a = {}
+    const u = s => l(s, r),
+      o = { module: { uri: r }, exports: a, require: u }
+    e[r] = Promise.all(i.map(s => o[s] || u(s))).then(s => (n(...s), a))
+  }
+}
+define(["./workbox-3631b453"], function (s) {
+  "use strict"
+  self.skipWaiting(),
+    s.clientsClaim(),
+    s.precacheAndRoute(
+      [
+        { url: "assets/_commonjs-dynamic-modules-TDtrdbi3.js", revision: null },
+        { url: "assets/arc-tn6AZvv7.js", revision: null },
+        { url: "assets/array-BKyUJesY.js", revision: null },
+        { url: "assets/blockDiagram-38ab4fdb-BEQlz7nS.js", revision: null },
+        { url: "assets/bug-issue-template-BID_ABWq.js", revision: null },
+        { url: "assets/c4Diagram-3d4e48cf-DzqzY5kA.js", revision: null },
+        { url: "assets/channel-BbaNtXe6.js", revision: null },
+        { url: "assets/classDiagram-70f12bd4-ZsMpHR05.js", revision: null },
+        { url: "assets/classDiagram-v2-f2320105-BF4bp90Q.js", revision: null },
+        { url: "assets/clone-DyYdV6_h.js", revision: null },
+        { url: "assets/createText-2e5e7dd3-DBqXGKBh.js", revision: null },
+        { url: "assets/directory-open-01563666-DWU9wJ6I.js", revision: null },
+        { url: "assets/directory-open-4ed118d0-BzWybGaI.js", revision: null },
+        { url: "assets/edges-e0da2a9e-Cwx3cVBg.js", revision: null },
+        { url: "assets/erDiagram-9861fffd-C-WNdiU8.js", revision: null },
+        { url: "assets/file-open-002ab408-DIuFHtCF.js", revision: null },
+        { url: "assets/file-open-7c801643-684qeFg4.js", revision: null },
+        { url: "assets/file-save-3189631c-x92wctJd.js", revision: null },
+        { url: "assets/file-save-745eba88-Bb9F9Kg7.js", revision: null },
+        {
+          url: "assets/flowchart-elk-definition-4a651766-JMH1TOA0.js",
+          revision: null,
+        },
+        { url: "assets/flowDb-956e92f1-Bvd00mUf.js", revision: null },
+        { url: "assets/flowDiagram-66a62f08-DDU6G5v2.js", revision: null },
+        { url: "assets/flowDiagram-v2-96b9c2cf-0F_DY6G4.js", revision: null },
+        { url: "assets/ganttDiagram-c361ad54-BQqusyoe.js", revision: null },
+        { url: "assets/gitGraphDiagram-72cf32ee-CBQPbS5g.js", revision: null },
+        { url: "assets/graph-BOUWbyN2.js", revision: null },
+        { url: "assets/image-blob-reduce.esm-B6b2_-a4.js", revision: null },
+        { url: "assets/index-3862675e-C1jR41yN.js", revision: null },
+        { url: "assets/index-CfYQCm_L.css", revision: null },
+        { url: "assets/index-ChGp7972.js", revision: null },
+        { url: "assets/index-CZaFGi8-.js", revision: null },
+        { url: "assets/index-OnkOn20b.js", revision: null },
+        { url: "assets/infoDiagram-f8f76790-C4kuWLQU.js", revision: null },
+        { url: "assets/init-Gi6I4Gst.js", revision: null },
+        { url: "assets/journeyDiagram-49397b02-BJixchJe.js", revision: null },
+        { url: "assets/katex-CfZphoad.js", revision: null },
+        { url: "assets/layout-qk1rFC3o.js", revision: null },
+        { url: "assets/line-Cran-sgz.js", revision: null },
+        { url: "assets/linear-LsXhnjv-.js", revision: null },
+        {
+          url: "assets/mindmap-definition-fc14e90a-DFb9ql4S.js",
+          revision: null,
+        },
+        { url: "assets/ordinal-Cboi1Yqb.js", revision: null },
+        { url: "assets/path-CbwjOpE9.js", revision: null },
+        { url: "assets/pica-D2f-msTZ.js", revision: null },
+        { url: "assets/pieDiagram-8a3498a8-C8qIjmnK.js", revision: null },
+        { url: "assets/quadrantDiagram-120e2f19-KHHu2z0x.js", revision: null },
+        { url: "assets/random-username.esm-__vdrxyo.js", revision: null },
+        {
+          url: "assets/requirementDiagram-deff3bca-CNdMVof2.js",
+          revision: null,
+        },
+        { url: "assets/roundRect-0PYZxl1G.js", revision: null },
+        { url: "assets/sankeyDiagram-04a897e0-DDGNAMxr.js", revision: null },
+        { url: "assets/sequenceDiagram-704730f1-DGNWFkwR.js", revision: null },
+        { url: "assets/stateDiagram-587899a1-2V6PokTY.js", revision: null },
+        { url: "assets/stateDiagram-v2-d93cdb3a-BTJiOvtB.js", revision: null },
+        { url: "assets/styles-6aaf32cf-Cj1havLc.js", revision: null },
+        { url: "assets/styles-9a916d00-AR8Rdns1.js", revision: null },
+        { url: "assets/styles-c10674c1-CHzin-CK.js", revision: null },
+        { url: "assets/svgDrawCommon-08f97a94-D5T_ZFQr.js", revision: null },
+        { url: "assets/Tableau10-B-NsZVaP.js", revision: null },
+        {
+          url: "assets/timeline-definition-85554ec2-vBSqMlCQ.js",
+          revision: null,
+        },
+        { url: "assets/workbox-window.prod.es5-B9K5rw8f.js", revision: null },
+        { url: "assets/xychartDiagram-e933f94c-BoOlHYML.js", revision: null },
+        { url: "index.html", revision: "84d34136985eef04e03e5473d600c638" },
+        {
+          url: "android-chrome-192x192.png",
+          revision: "3d005c71b9ea629a8d137916a02ce9af",
+        },
+        {
+          url: "apple-touch-icon.png",
+          revision: "a9b855bc4fa588808a72c126fa9ade00",
+        },
+        {
+          url: "favicon-16x16.png",
+          revision: "6fc51d9533178efaec96f5c3c1f4c357",
+        },
+        {
+          url: "favicon-32x32.png",
+          revision: "1bcbbaf7639d13ce6e4abbd4a785f3dd",
+        },
+        {
+          url: "manifest.webmanifest",
+          revision: "9665628e4b8d1fb2e26d7e071c031172",
+        },
+      ],
+      {}
+    ),
+    s.cleanupOutdatedCaches(),
+    s.registerRoute(
+      new s.NavigationRoute(s.createHandlerBoundToURL("index.html"))
+    ),
+    s.registerRoute(
+      /.+.woff2/,
+      new s.CacheFirst({
+        cacheName: "fonts",
+        plugins: [
+          new s.ExpirationPlugin({ maxEntries: 1e3, maxAgeSeconds: 7776e3 }),
+          new s.CacheableResponsePlugin({ statuses: [0, 200] }),
+        ],
+      }),
+      "GET"
+    ),
+    s.registerRoute(
+      /fonts.css/,
+      new s.StaleWhileRevalidate({
+        cacheName: "fonts",
+        plugins: [new s.ExpirationPlugin({ maxEntries: 50 })],
+      }),
+      "GET"
+    ),
+    s.registerRoute(
+      /locales\/[^/]+.js/,
+      new s.CacheFirst({
+        cacheName: "locales",
+        plugins: [
+          new s.ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 2592e3 }),
+        ],
+      }),
+      "GET"
+    ),
+    s.registerRoute(
+      /.chunk-.+.js/,
+      new s.CacheFirst({
+        cacheName: "chunk",
+        plugins: [
+          new s.ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 7776e3 }),
+        ],
+      }),
+      "GET"
+    )
+})
+//# sourceMappingURL=sw.js.map

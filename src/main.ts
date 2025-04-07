@@ -1,6 +1,9 @@
 import "./style.css"
-import { mockDate } from "./mockdate.ts"
 import { createSandbox } from "./sandbox.ts"
 
 let parent = document.querySelector<HTMLDivElement>("#app")!
-createSandbox(parent)
+let doc = await (await fetch("/excalidraw/index.html")).text()
+createSandbox(
+  parent
+  // doc
+)
