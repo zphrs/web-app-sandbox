@@ -1,6 +1,14 @@
 // override date
-import { createDatePrototypalOverrideWorm } from "./createPrototypalOverrideWorm"
-function getInitialIframeScript(date: Date): HTMLScriptElement {
-  let overrideVirus = createDatePrototypalOverrideWorm(date)
-  let dateScript = overrideVirus.innerText
+import { domReplacement } from "frame-glue"
+import { overrideCookie } from "./overrideCookie"
+import { overrideLocalStorage } from "./overrideLocalStorage"
+export function getInitialIframeScript(docId: string): HTMLScriptElement {
+  const out = document.createElement("script")
+  out.innerHTML = `
+    ${overrideLocalStorage.toString()};
+    overrideLocalStorage("${docId}");
+    ${overrideCookie};
+    overrideCookie()
+  `
+  return out
 }

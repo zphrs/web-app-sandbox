@@ -1,5 +1,4 @@
 import { defineConfig } from "vite"
-import { serviceWorkerPlugin } from "@gautemo/vite-plugin-service-worker"
 import { VitePWA } from "vite-plugin-pwa"
 
 export default defineConfig({
@@ -14,4 +13,9 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    cors: true,
+    port: 5173,
+    allowedHosts: ["localhost"],
+  },
 })

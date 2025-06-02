@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
   const envVars = loadEnv(mode, `../`);
   // https://vitejs.dev/config/
   return {
+    base: "/excalidraw/",
     server: {
       port: Number(envVars.VITE_APP_PORT || 3000),
       // open the browser
@@ -25,7 +26,10 @@ export default defineConfig(({ mode }) => {
       alias: [
         {
           find: /^@excalidraw\/common$/,
-          replacement: path.resolve(__dirname, "../packages/common/src/index.ts"),
+          replacement: path.resolve(
+            __dirname,
+            "../packages/common/src/index.ts",
+          ),
         },
         {
           find: /^@excalidraw\/common\/(.*?)/,
@@ -33,7 +37,10 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: /^@excalidraw\/element$/,
-          replacement: path.resolve(__dirname, "../packages/element/src/index.ts"),
+          replacement: path.resolve(
+            __dirname,
+            "../packages/element/src/index.ts",
+          ),
         },
         {
           find: /^@excalidraw\/element\/(.*?)/,
@@ -41,7 +48,10 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: /^@excalidraw\/excalidraw$/,
-          replacement: path.resolve(__dirname, "../packages/excalidraw/index.tsx"),
+          replacement: path.resolve(
+            __dirname,
+            "../packages/excalidraw/index.tsx",
+          ),
         },
         {
           find: /^@excalidraw\/excalidraw\/(.*?)/,
@@ -57,7 +67,10 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: /^@excalidraw\/utils$/,
-          replacement: path.resolve(__dirname, "../packages/utils/src/index.ts"),
+          replacement: path.resolve(
+            __dirname,
+            "../packages/utils/src/index.ts",
+          ),
         },
         {
           find: /^@excalidraw\/utils\/(.*?)/,
@@ -213,7 +226,7 @@ export default defineConfig(({ mode }) => {
             },
           ],
           start_url: "/",
-          id:"excalidraw",
+          id: "excalidraw",
           display: "standalone",
           theme_color: "#121212",
           background_color: "#ffffff",

@@ -1,54 +1,63 @@
-import { createDatePrototypalOverrideWorm } from "./createPrototypalOverrideWorm"
+import { domReplacementParentSetup, sleep } from "frame-glue"
+import { SUBDOMAIN_WILDCARD_URL } from "./envs"
+import { getInitialIframeScript } from "./initialIframe"
+import { localStorageParentSetup } from "./overrideLocalStorage"
+
 function createCspMeta(): HTMLMetaElement {
   let metaTag = document.createElement("meta")
   metaTag.httpEquiv = "Content-Security-Policy"
   // likely should use hashes at some point for script restrictions
   // that way scripts can be versioned
   metaTag.content =
-    "default-src 'unsafe-inline'; script-src 'unsafe-inline' 'self'; frame-src 'none';"
+    "default-src 'unsafe-inline' 'self'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline' 'self'; frame-src 'none'; img-src 'self' data:;"
   return metaTag
 }
 
-function composeDocument(html: string): Document {
+function createBase(basePath: string): HTMLBaseElement {
+  let base = document.createElement("base")
+  base.href = window.origin + "/" + basePath
+  console.log("Base", base.href)
+  return base
+}
+
+function composeDocument(html: string, appId: string): Document {
   let doc = document.implementation.createHTMLDocument()
   doc.documentElement.innerHTML = html
-  doc.head.prepend(createDatePrototypalOverrideWorm(new Date("Jan 1, 2000")))
+  // doc.head.prepend(createBase(appId))
   doc.head.prepend(createCspMeta())
   return doc
 }
 
-export function createSandbox(parent: HTMLElement, index?: string) {
+export async function createSandbox(
+  parent: HTMLElement,
+  index?: string,
+  docId = "test",
+  appId = ""
+) {
   let iframe = document.createElement("iframe")
+  let iframeScript = getInitialIframeScript(docId)
+  let initialDoc = composeDocument(iframeScript.outerHTML, appId)
+
+  iframe.src = SUBDOMAIN_WILDCARD_URL.replace("*", crypto.randomUUID())
+  // iframe.srcdoc = initialDoc.documentElement.outerHTML
+  iframe.sandbox.add("allow-scripts")
+  iframe.sandbox.add("allow-same-origin")
+  iframe.allow = "clipboard-write"
+  parent.appendChild(iframe)
+  const replaceDom = await domReplacementParentSetup(iframe)
+  replaceDom(initialDoc.documentElement.outerHTML)
+  await localStorageParentSetup(docId, iframe)
   let html =
     index ??
     `
-  <div>
-  <base href="${window.origin}"</base>
-  <script src="test.js"></script>
-  <script>
-  console.log(Date.now()); 
-  </script>
-  <script>
-  window.addEventListener('message', function(event) {
-    document.documentElement.append(event.data)
-    console.log("Message received from the child: " + event.data); // Message received from child
-  });
-  </script>
-  <iframe srcdoc="
-  <body>
-  <script>
-  console.log('HERE', Date.now())
-  // window.parent.postMessage(Date.now(), '*')
-  </script>
-  <iframe srcdoc='<script>console.log(Date.now())</script>' />
-  </body>
+    <script>
+    console.log("Successfully ran script")
+    </script>
+    <script src="test.js"></script>
 
-  "></iframe>
-  </div>
-  `
-  let doc = composeDocument(html)
-  iframe.srcdoc = doc.documentElement.outerHTML
+    Hello world!
+    `
+  let doc = composeDocument(html, appId)
+  replaceDom(doc.documentElement.outerHTML)
   // iframe.src = `data:text/html;base64,${btoa(doc.documentElement.outerHTML)}`
-  iframe.sandbox.add("allow-scripts")
-  parent.appendChild(iframe)
 }

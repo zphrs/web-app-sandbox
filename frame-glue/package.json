@@ -1,0 +1,16 @@
+{
+  "name": "frame-glue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc -b --watch",
+    "check": "tsc --noEmit",
+    "prepublish": "build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
