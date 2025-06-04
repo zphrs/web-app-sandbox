@@ -1,4 +1,5 @@
-import { ProxiedFetchRequest } from "./sw-passthrough-api"
+import { FetchEvent } from "./fetchEventPolyfill"
+import type { ProxiedFetchRequest } from "./sw-passthrough-api"
 
 export function stringifiableRequestInit(
   obj: object
@@ -24,36 +25,35 @@ export function responseToResponseInit(res: Response): ResponseInit {
 }
 
 export function proxiedRequestToFetchEvent(data: ProxiedFetchRequest) {
-  const request = requestFromObject(data.request)
+  const request = requestFromObject(data.params.request)
   return new FetchEvent("fetch", {
     request,
-    clientId: data.clientId,
-    resultingClientId: data.resultingClientId,
+    clientId: data.params.clientId,
+    replacesClientId: data.params.replacesClientId,
+    resultingClientId: data.params.resultingClientId,
   })
 }
 
 export type ClonableRequest = Awaited<ReturnType<typeof requestAsObject>>
 
-export async function requestAsObject(request: Request) {
+export async function requestAsObject(
+  request: Request
+): Promise<[string, RequestInit]> {
   const arrayBuffer = await request.arrayBuffer()
   const { url, ...rest } = stringifiableRequestInit(request)
-  return {
-    url,
-    rest: rest,
+  const requestInit = {
+    ...rest,
     headers: Object.fromEntries(request.headers),
-    // signal can be omitted because abortSignals aren't functional in service
-    // workers anyway
-    //
-    // see /references.md#1-abortsignal-in-service-worker-nonfunctional
-    arrBuf: arrayBuffer,
+    body: arrayBuffer,
   }
+  // signal can be omitted because abortSignals aren't functional in service
+  // workers anyway
+  //
+  // see /references.md#1-abortsignal-in-service-worker-nonfunctional
+  return [url, requestInit]
 }
 
 export function requestFromObject(request: ClonableRequest) {
-  const out = new Request(request.url, {
-    headers: request.headers,
-    ...request.rest,
-    body: request.arrBuf,
-  })
-  return out
+  const [url, requestInit] = request
+  return new Request(new URL(url), requestInit)
 }

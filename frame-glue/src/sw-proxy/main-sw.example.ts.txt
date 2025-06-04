@@ -1,5 +1,5 @@
 import { requestFromObject, responseToResponseInit } from "./fetchConversions"
-import { ProxiedFetchRequest, ProxiedResponse } from "./sw-passthrough-api"
+import type { ProxiedFetchRequest, ProxiedResponse } from "./sw-passthrough-api"
 
 const sw: ServiceWorkerGlobalScope = self as unknown as ServiceWorkerGlobalScope
 
@@ -23,7 +23,7 @@ export function handleIframeProxiedRequests(port: MessagePort) {
           port.postMessage({
             arrBuf: await res.arrayBuffer(),
             responseInit: responseToResponseInit(res),
-            symbol: event.data.symbol,
+            symbol: event.data.id,
           } satisfies ProxiedResponse)
         })
     }

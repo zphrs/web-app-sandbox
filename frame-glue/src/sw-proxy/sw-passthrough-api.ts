@@ -1,49 +1,73 @@
+/// Loosely follows the jsonRPC spec for cross frame communication
+/// https://www.jsonrpc.org/specification
+/// <reference lib="WebWorker" />
+export type {}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const self: ServiceWorkerGlobalScope
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare const globalThis: ServiceWorkerGlobalScope
 import {
-  ClonableRequest,
+  type ClonableRequest,
   responseToResponseInit,
   requestAsObject,
   proxiedRequestToFetchEvent,
 } from "./fetchConversions"
-
+import type { FetchEvent } from "./fetchEventPolyfill"
 export type ProxiedFetchRequest = {
-  request: ClonableRequest
-  clientId: string
-  resultingClientId: string
-  symbol: string
+  id: string | number
+  params: Omit<FetchEventInit, "request"> & {
+    request: ClonableRequest
+  }
 }
 
-export type ProxiedResponse = {
-  arrBuf: ArrayBuffer
-  responseInit: ResponseInit
-  symbol: string
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type ErroredProxyResponse = {
+  id: string | number
+  error: {
+    code: number
+    message: string
+    data: undefined
+  }
 }
+
+type SuccessfulProxiedResponse = {
+  result: {
+    arrBuf: ArrayBuffer
+    responseInit: ResponseInit
+  }
+  id: string | number
+}
+
+export type ProxiedResponse = SuccessfulProxiedResponse
 
 async function sendProxiedResponse(
   port: MessagePort,
-  symbol: string,
+  id: string | number,
   res: Response
 ) {
   port.postMessage({
-    arrBuf: await res.arrayBuffer(),
-    responseInit: responseToResponseInit(res),
-    symbol: symbol,
+    result: {
+      arrBuf: await res.arrayBuffer(),
+      responseInit: responseToResponseInit(res),
+    },
+    id,
   } satisfies ProxiedResponse)
 }
 async function receiveProxiedResponse(
   port: MessagePort,
-  symbol: string
+  id: string
 ): Promise<Response> {
   const controller = new AbortController()
   return new Promise(res => {
     port.addEventListener(
       "message",
       (msgEvent: MessageEvent<ProxiedResponse>) => {
-        const { symbol: resSymbol } = msgEvent.data
-        if (resSymbol != symbol) return
+        const { id: resId } = msgEvent.data
+        if (resId != id) return
         controller.abort() // same as fetch request
         const out = new Response(
-          msgEvent.data.arrBuf as ArrayBuffer,
-          msgEvent.data.responseInit as ResponseInit
+          msgEvent.data.result.arrBuf as ArrayBuffer,
+          msgEvent.data.result.responseInit as ResponseInit
         )
         res(out)
       },
@@ -64,19 +88,16 @@ export async function proxyFetchEvent(
   port: MessagePort,
   event: FetchEvent
 ): Promise<Response> {
-  const symbol = [
-    event.request.method,
-    event.request.url,
-    "@",
-    event.timeStamp,
-  ].join(" ")
+  const id = globalThis.crypto.randomUUID()
   port.postMessage({
-    request: await requestAsObject(event.request),
-    clientId: event.clientId,
-    resultingClientId: event.resultingClientId,
-    symbol,
+    params: {
+      request: await requestAsObject(event.request),
+      clientId: event.clientId,
+      resultingClientId: event.resultingClientId,
+    },
+    id,
   } satisfies ProxiedFetchRequest)
-  return receiveProxiedResponse(port, symbol)
+  return receiveProxiedResponse(port, id)
 }
 /**
  * Used on the client's main page (or within a worker) to handle requests
@@ -85,14 +106,14 @@ export async function proxyFetchEvent(
  */
 export async function handleProxiedFetchEvent(
   port: MessagePort,
-  onfetch: (event: FetchEvent) => any
+  onfetch: (event: FetchEvent) => void
 ) {
   port.addEventListener(
     "message",
     async (ev: MessageEvent<ProxiedFetchRequest>) => {
       const fetchEvent = proxiedRequestToFetchEvent(ev.data)
       fetchEvent.respondWith = async r => {
-        sendProxiedResponse(port, ev.data.symbol, await r)
+        sendProxiedResponse(port, ev.data.id, await r)
       }
       onfetch(fetchEvent)
     }

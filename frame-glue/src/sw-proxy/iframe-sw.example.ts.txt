@@ -1,14 +1,14 @@
 /// <reference lib="webworker" />
 
 import { requestAsObject } from "./fetchConversions"
-import { ProxiedFetchRequest, ProxiedResponse } from "./sw-passthrough-api"
+import type { ProxiedFetchRequest, ProxiedResponse } from "./sw-passthrough-api"
 
 // export empty type because of tsc --isolatedModules flag
 export type {}
 declare const self: ServiceWorkerGlobalScope
 
 let setMainSw: (port: MessagePort) => void
-let mainSwPromise = new Promise<MessagePort>(res => {
+const mainSwPromise = new Promise<MessagePort>(res => {
   setMainSw = res
 })
 
@@ -31,7 +31,7 @@ self.addEventListener("fetch", event => {
   event.respondWith(handleFetch(event))
 })
 
-export async function handleFetch(event: FetchEvent): Promise<Response> {
+async function handleFetch(event: FetchEvent): Promise<Response> {
   const mainSw = await mainSwPromise
   const symbol = [
     event.request.method,
@@ -41,10 +41,12 @@ export async function handleFetch(event: FetchEvent): Promise<Response> {
   ].join(" ")
 
   mainSw.postMessage({
-    request: await requestAsObject(event.request),
-    clientId: event.clientId,
-    resultingClientId: event.resultingClientId,
-    symbol,
+    params: {
+      request: await requestAsObject(event.request),
+      clientId: event.clientId,
+      resultingClientId: event.resultingClientId,
+    },
+    id: symbol,
   } satisfies ProxiedFetchRequest)
   const controller = new AbortController()
   return new Promise(res => {
