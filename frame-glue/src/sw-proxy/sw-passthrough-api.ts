@@ -20,15 +20,14 @@ export type ProxiedFetchRequest = {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type ErroredProxyResponse = {
-  id: string | number
-  error: {
-    code: number
-    message: string
-    data: undefined
-  }
-}
+// type ErroredProxyResponse = {
+//   id: string | number
+//   error: {
+//     code: number
+//     message: string
+//     data: undefined
+//   }
+// }
 
 type SuccessfulProxiedResponse = {
   result: {

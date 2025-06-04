@@ -1,4 +1,5 @@
-import { ProxiedFetchRequest } from "./sw-passthrough-api";
+import { FetchEvent } from './fetchEventPolyfill';
+import { ProxiedFetchRequest } from './sw-passthrough-api';
 export declare function stringifiableRequestInit(obj: object): Exclude<RequestInit & {
     url: string;
 }, "headers">;

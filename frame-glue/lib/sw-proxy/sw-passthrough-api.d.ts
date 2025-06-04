@@ -1,15 +1,20 @@
-import { ClonableRequest } from "./fetchConversions";
+import { ClonableRequest } from './fetchConversions';
+import { FetchEvent } from './fetchEventPolyfill';
+export type {};
 export type ProxiedFetchRequest = {
-    request: ClonableRequest;
-    clientId: string;
-    resultingClientId: string;
-    symbol: string;
+    id: string | number;
+    params: Omit<FetchEventInit, "request"> & {
+        request: ClonableRequest;
+    };
 };
-export type ProxiedResponse = {
-    arrBuf: ArrayBuffer;
-    responseInit: ResponseInit;
-    symbol: string;
+type SuccessfulProxiedResponse = {
+    result: {
+        arrBuf: ArrayBuffer;
+        responseInit: ResponseInit;
+    };
+    id: string | number;
 };
+export type ProxiedResponse = SuccessfulProxiedResponse;
 /**
  * Used in an onfetch event in the iframe's swervice worker
  * @param port
@@ -25,4 +30,4 @@ export declare function proxyFetchEvent(port: MessagePort, event: FetchEvent): P
  * @param port
  * @param onfetch
  */
-export declare function handleProxiedFetchEvent(port: MessagePort, onfetch: (event: FetchEvent) => any): Promise<void>;
+export declare function handleProxiedFetchEvent(port: MessagePort, onfetch: (event: FetchEvent) => void): Promise<void>;
