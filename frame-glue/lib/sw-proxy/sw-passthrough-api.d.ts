@@ -16,7 +16,7 @@ type SuccessfulProxiedResponse = {
 };
 export type ProxiedResponse = SuccessfulProxiedResponse;
 /**
- * Used in an onfetch event in the iframe's swervice worker
+ * Used in an onfetch event in the iframe's service worker
  * @param port
  * @param symbol
  * @param request

@@ -4,7 +4,6 @@
 export type {}
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const self: ServiceWorkerGlobalScope
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare const globalThis: ServiceWorkerGlobalScope
 import {
   type ClonableRequest,
@@ -75,7 +74,7 @@ async function receiveProxiedResponse(
   })
 }
 /**
- * Used in an onfetch event in the iframe's swervice worker
+ * Used in an onfetch event in the iframe's service worker
  * @param port
  * @param symbol
  * @param request

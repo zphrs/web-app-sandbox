@@ -1,3 +1,7 @@
+// need to polyfill fetch event for the main page thread because ideally the
+// proxy-sw should run in its own web worker separate from the service worker
+// of the main page. the FetchEvent is only supported in ServiceWorkers however.
+
 export class FetchEvent extends Event {
   clientId: string | undefined
   replacesClientId: string | undefined
