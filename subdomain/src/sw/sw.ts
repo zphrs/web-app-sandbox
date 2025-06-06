@@ -1,13 +1,17 @@
 /// <reference lib="webworker" />
 export type {}
 declare const self: ServiceWorkerGlobalScope
-import { requestAsObject } from "./fetchConversions"
-import type { ProxiedFetchRequest, ProxiedResult } from "./sw-passthrough-api"
+import { proxyFetchEvent, sendInitEvent } from "frame-glue"
 
-let setMainSw: (port: MessagePort) => void
-let mainSwPromise = new Promise<MessagePort>(res => {
-  setMainSw = res
-})
+let mainSwPromises: Map<
+  string,
+  {
+    promise: Promise<MessagePort>
+    // undefined if is set
+    set?: (port: MessagePort) => void
+    get isSet(): boolean
+  }
+> = new Map()
 
 self.addEventListener("install", () => {
   self.skipWaiting() // makes service worker install immediately
@@ -15,55 +19,84 @@ self.addEventListener("install", () => {
 
 self.addEventListener("activate", e => {
   // makes service worker activate immediately for all requests going forward
-  e.waitUntil(self.clients.claim())
+  // console.log("activating")
+  // if (self.registration.installing)
+  e.waitUntil(
+    (async () => {
+      try {
+        await self.clients.claim()
+      } catch (err) {
+        console.error("WHOOPS", err)
+      }
+    })()
+  )
+  // else {
+  console.log(self.registration)
+  // }
 })
 
 self.addEventListener("message", event => {
   // should only ever be the port to the main page's sw
   // if *this* service worker is being mounted to the page
-  console.log("main sw set")
-  setMainSw(event.ports[0])
-  mainSwPromise = new Promise<MessagePort>(res => {
-    setMainSw = res
-  })
-  setMainSw(event.ports[0])
+  console.log((event.source as Client).id)
+  if (event.data != "init-sw-proxy") {
+    console.warn("unexpected message to ghost proxy")
+    return
+  }
+
+  // in order to reuse a service worker that has already been used
+  const id = (event.source as Client).id
+  let mainSwPromise = mainSwPromises.get(id)
+  if (mainSwPromise == undefined) {
+    const promise = new Promise<MessagePort>(res => res(event.ports[0]))
+    mainSwPromise = {
+      promise,
+      set: undefined, // already set
+      get isSet() {
+        return this.promise == undefined
+      },
+    }
+    mainSwPromises.set(id, mainSwPromise)
+    sendInitEvent(event.ports[0])
+  } else {
+    if (mainSwPromise.set) {
+      mainSwPromise.set(event.ports[0])
+      delete mainSwPromise.set
+      sendInitEvent(event.ports[0])
+    }
+  }
 })
 
 self.addEventListener("fetch", event => {
-  event.respondWith(handleFetch(event))
+  event.respondWith(
+    (async () => {
+      const url = new URL(event.request.url)
+      if (url.origin == self.origin && url.pathname == "/") {
+        return await fetch(event.request)
+      }
+      let mainSwPromise = mainSwPromises.get(event.clientId)
+      if (!mainSwPromise) {
+        let set
+        const promise = new Promise<MessagePort>(res => (set = res))
+        mainSwPromise = {
+          set,
+          promise,
+          get isSet() {
+            return this.promise == undefined
+          },
+        }
+        mainSwPromises.set(event.clientId, mainSwPromise)
+        console.log(":(", await self.clients.matchAll())
+        self.clients.get(event.clientId).then(c => {
+          if (c == undefined) {
+            console.warn("Unexpected")
+            return
+          }
+          c.postMessage("refresh port")
+        })
+      }
+      const mainSw = await mainSwPromise.promise
+      return proxyFetchEvent(mainSw, event)
+    })()
+  )
 })
-
-export async function handleFetch(event: FetchEvent): Promise<Response> {
-  const url = new URL(event.request.url)
-  if (url.origin == self.origin && url.pathname == "/") {
-    return await fetch(event.request)
-  }
-  const mainSw = await mainSwPromise
-  mainSw.start()
-  const symbol = crypto.randomUUID()
-  console.log(event)
-  mainSw.postMessage({
-    request: await requestAsObject(event.request),
-    clientId: event.clientId,
-    resultingClientId: event.resultingClientId,
-    symbol,
-  } satisfies ProxiedFetchRequest)
-  const controller = new AbortController()
-  return new Promise(res => {
-    mainSw.addEventListener(
-      "message",
-      (msgEvent: MessageEvent<ProxiedResult>) => {
-        const { symbol: resSymbol, arrBuf, responseInit } = msgEvent.data
-        console.log(symbol)
-        if (resSymbol != symbol) return
-        controller.abort() // same as fetch request
-        const out = new Response(
-          arrBuf as ArrayBuffer,
-          responseInit as ResponseInit
-        )
-        res(out)
-      },
-      { signal: controller.signal }
-    )
-  })
-}

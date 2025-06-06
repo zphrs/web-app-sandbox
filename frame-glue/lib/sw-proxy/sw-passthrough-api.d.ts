@@ -1,5 +1,4 @@
 import { ClonableRequest } from './fetchConversions';
-import { FetchEvent } from './fetchEventPolyfill';
 export type {};
 export type ProxiedFetchRequest = {
     id: string | number;
@@ -25,9 +24,10 @@ export type ProxiedResponse = SuccessfulProxiedResponse;
  * @returns
  */
 export declare function proxyFetchEvent(port: MessagePort, event: FetchEvent): Promise<Response>;
+export declare function sendInitEvent(port: MessagePort): Promise<void>;
 /**
  * Used on the client's main page (or within a worker) to handle requests
  * @param port
  * @param onfetch
  */
-export declare function handleProxiedFetchEvent(port: MessagePort, onfetch: (event: FetchEvent) => void): Promise<void>;
+export declare function handleProxiedFetchEvent(port: MessagePort, onfetch: (event: FetchEvent) => void): Promise<() => void>;

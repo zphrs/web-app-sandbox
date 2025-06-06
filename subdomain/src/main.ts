@@ -1,43 +1,70 @@
-import type { ProxiedResult } from "./sw/sw-passthrough-api"
-
-import { domReplacement } from "frame-glue"
+import { domReplacement, overrideLocalStorage } from "frame-glue"
 
 domReplacement()
+overrideLocalStorage(new URL(origin).pathname.slice(1))
+
+function refreshPort() {
+  window.parent.postMessage("iframe refresh port", "*")
+}
 
 async function initSwProxy(port: MessagePort) {
   if (!("serviceWorker" in navigator))
     throw new Error("Service worker is unsupported.")
-
-  const reg = await navigator.serviceWorker.register(
-    import.meta.env.MODE === "production" ? "/sw.js" : "/dev-sw.js?dev-sw",
-    { type: import.meta.env.MODE === "production" ? "classic" : "module" }
-  )
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (navigator.serviceWorker.controller == null) {
-      throw new Error("Service worker is not registered yet")
-    }
-    navigator.serviceWorker.controller.postMessage("init-sw-proxy", [port])
-  })
-  window.addEventListener("beforeunload", () => {
-    reg.unregister() // unregister to clean up this sw
-  })
-}
-const { port1, port2 } = new MessageChannel()
-port1.addEventListener("message", event => {
-  console.log(event.data)
-  port2.postMessage({
-    arrBuf: new ArrayBuffer(),
-    responseInit: { status: 200 },
-    symbol: event.data.symbol,
-  } satisfies ProxiedResult)
-})
-port1.start()
-initSwProxy(port2)
-
-window.addEventListener("message", (event: MessageEvent<any>) => {
-  if (event.data == "init-proxied-sw port") {
-    const portForSw = event.ports[0]
-    initSwProxy(portForSw)
+  console.log("initing sw")
+  const existingReg = await navigator.serviceWorker.getRegistration()
+  const onInstalled = (controller: ServiceWorker) => {
+    console.log("sw installed")
+    controller.postMessage("init-sw-proxy", [port])
+    console.log("posted port")
+    controller.addEventListener("error", e => {
+      console.log("SW ERR", e)
+    })
+    navigator.serviceWorker.addEventListener(
+      "message",
+      e => {
+        console.log("MSG", e)
+        if (e.data == "refresh port") {
+          refreshPort()
+        }
+      },
+      { once: true }
+    )
   }
-  console.warn("Unknown event type sent to wildcard domain: ", event)
+  const reg =
+    existingReg ??
+    // (await navigator.serviceWorker.register("/sw.js?dev"))
+    (await navigator.serviceWorker.register(
+      import.meta.env.MODE === "production" ? "/sw.js" : "/dev-sw.js?dev-sw",
+      { type: import.meta.env.MODE === "production" ? "classic" : "module" }
+    ))
+  if (navigator.serviceWorker.controller && reg.active) {
+    onInstalled(navigator.serviceWorker.controller)
+    return
+  }
+  console.log(await navigator.serviceWorker.getRegistrations())
+  navigator.serviceWorker.addEventListener("controllerchange", async e => {
+    console.log(e)
+    if (navigator.serviceWorker.controller)
+      onInstalled(navigator.serviceWorker.controller)
+    else
+      console.warn("controller change happened and controller is still null", e)
+  })
+  // unregister to clean up this sw when the page closes.
+  // deregistration only applies after all active clients close
+
+  // reg.unregister()
+}
+window.addEventListener("message", async (event: MessageEvent<any>) => {
+  console.log(event)
+  if (event.data == "init-proxied-sw port") {
+    console.log("init-proxied-sw", event.data, event.ports.length)
+    const portForSw = event.ports[0]
+    // sleep to wait for deregistration of the old service worker,
+    // if an old sw exists
+    initSwProxy(portForSw).then(() => {
+      window.parent.postMessage("init-proxied-sw port inited", "*")
+    })
+  }
 })
+
+window.parent.postMessage("iframe inited", "*")

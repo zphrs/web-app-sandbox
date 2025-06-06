@@ -1,13 +1,9 @@
 export function domReplacement() {
+  console.log("HERE")
   window.addEventListener("message", ev => {
-    console.log(ev)
     if (ev.data != "domReplacementInit") return
     const port = ev.ports[0]
-    console.log("domReplacementInit")
-    port.onmessage = ev => {
-      console.log("overriding", ev.data)
-      console.log(ev)
-
+    port.onmessage = async ev => {
       window.document.documentElement.innerHTML = ev.data
       const scripts = document.querySelectorAll("script")
       for (const node of scripts) {
@@ -16,7 +12,7 @@ export function domReplacement() {
         for (const attribute of node.attributes) {
           script.setAttribute(attribute.nodeName, attribute.nodeValue!)
         }
-        script.innerHTML = node.innerHTML
+        script.innerText = node.innerText
         node.replaceWith(script)
       }
     }
@@ -37,14 +33,12 @@ export async function domReplacementParentSetup(
 ): Promise<(newDom: string) => void> {
   const { port1: port, port2: childPort } = new MessageChannel()
   const waitTillInited = new Promise<void>(res => {
-    port.onmessage = ev => {
-      console.log("Dom replacement initialized", ev)
+    port.addEventListener("message", () => {
       res()
-    }
+    })
+    port.start()
   })
-  await sleep(0.5)
   if (iframe.contentWindow) {
-    console.log(iframe.contentDocument?.readyState)
     iframe.contentWindow.postMessage("domReplacementInit", "*", [childPort])
   } else {
     iframe.addEventListener("load", () => {
@@ -52,12 +46,10 @@ export async function domReplacementParentSetup(
       iframe.contentWindow!.postMessage("domReplacementInit", "*", [childPort])
     })
   }
-  console.log("AWAITING INIT")
   await waitTillInited
-  console.log("FINISHED AWAITING INIT")
 
   return (newDom: string) => {
-    console.log("Posting", newDom)
+    console.log("Posting replacement message")
     port.postMessage(newDom)
   }
 }

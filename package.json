@@ -5,7 +5,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter ./frame-glue run watch & (vite & (cd subdomain && pnpm build && pnpm preview))",
+    "predev": "pnpm --filter ./frame-glue run build && pnpm --filter ./subdomain run build",
+    "dev": "pnpm predev && (pnpm --filter ./subdomain run preview)",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

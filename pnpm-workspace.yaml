@@ -1,5 +1,4 @@
 packages:
-  - "/"
   - "subdomain"
-  - "vite-plugin-inline-source"
   - "frame-glue"
+  - "/"

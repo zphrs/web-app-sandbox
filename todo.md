@@ -1,8 +1,9 @@
 # Todos
 
-- [ ] [Fix] Handle script imports from html files somehow (likely fetching scripts and putting them into a script tag + [import maps](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap))
+- [X] [Fix] Handle script imports from html files somehow (likely fetching scripts and putting them into a script tag
+- [ ] [Fix] Clear localStorage and IndexedDB on initial load
 - [ ] [Feat] Override:
-  - [ ] `fetch` and `XMLHTTPRequest` in iframe to talk to parent frame
+  - [X] `fetch` and `XMLHTTPRequest` in iframe to talk to parent frame
   - [X] `localStorage` for persisting data
   - [ ] `indexedDB` for persisting data
 - [ ] [Feat] Allow sandboxed applications to use iframe

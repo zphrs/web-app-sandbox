@@ -15,6 +15,7 @@ export default defineConfig({
       filename: "sw.ts",
       devOptions: {
         enabled: true,
+        type: "module",
       },
     }),
     inlineSource(),

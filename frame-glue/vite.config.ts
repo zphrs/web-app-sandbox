@@ -7,9 +7,8 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
       formats: ["es"],
-      fileName: "index.ts",
+      fileName: "index",
     },
-
     outDir: "./lib",
     minify: false,
   },

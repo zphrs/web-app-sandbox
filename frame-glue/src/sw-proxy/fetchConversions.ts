@@ -1,4 +1,4 @@
-import { FetchEvent } from "./fetchEventPolyfill"
+import { FetchEvent as FetchEventPolyfill } from "./fetchEventPolyfill"
 import type { ProxiedFetchRequest } from "./sw-passthrough-api"
 
 export function stringifiableRequestInit(
@@ -26,12 +26,12 @@ export function responseToResponseInit(res: Response): ResponseInit {
 
 export function proxiedRequestToFetchEvent(data: ProxiedFetchRequest) {
   const request = requestFromObject(data.params.request)
-  return new FetchEvent("fetch", {
+  return new FetchEventPolyfill("fetch", {
     request,
     clientId: data.params.clientId,
     replacesClientId: data.params.replacesClientId,
     resultingClientId: data.params.resultingClientId,
-  })
+  }) as FetchEvent
 }
 
 export type ClonableRequest = Awaited<ReturnType<typeof requestAsObject>>
@@ -55,5 +55,8 @@ export async function requestAsObject(
 
 export function requestFromObject(request: ClonableRequest) {
   const [url, requestInit] = request
+  if (["GET", "HEAD"].includes(requestInit.method ?? "")) {
+    delete requestInit.body
+  }
   return new Request(new URL(url), requestInit)
 }

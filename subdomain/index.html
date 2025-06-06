@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- prevent a request for favicon -->
@@ -12,9 +12,17 @@
       see https://github.com/w3c/ServiceWorker/issues/1026 for discussion on adding
       ability to bypass sw fetch call
     -->
+    <!-- <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src * 'unsafe-inline' 'unsafe-eval' data:; frame-src 'none';"
+    /> -->
+    <!-- 
+        unfortunately have to restrict requests to 'self' thanks to 
+        https://github.com/w3c/webappsec-csp/issues/733 
+      -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self' 'unsafe-inline';"
+      content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data:;"
     />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { requestAsObject, requestFromObject } from "./fetchConversions"
 import { handleProxiedFetchEvent, proxyFetchEvent } from "./sw-passthrough-api"
-import { FetchEvent } from "./fetchEventPolyfill"
+import { FetchEvent as FetchEventPolyfill } from "./fetchEventPolyfill"
 describe("fetchConversions", () => {
   test("request send", async () => {
     const original = new Request("https://example.com/test", {
@@ -20,7 +20,7 @@ describe("fetchConversions", () => {
 describe("sw-passthrough-api", () => {
   test("proxy fetch", async () => {
     const { port1: swPort, port2: mainPort } = new MessageChannel()
-    const fe = new FetchEvent("fetch", {
+    const fe = new FetchEventPolyfill("fetch", {
       request: new Request("https://example.com/test", {
         method: "POST",
         body: "test",
@@ -33,7 +33,7 @@ describe("sw-passthrough-api", () => {
       expect(await event.request.text()).to.equal("test")
       event.respondWith(new Promise(res => res(new Response("success"))))
     })
-    const res = await proxyFetchEvent(swPort, fe)
+    const res = await proxyFetchEvent(swPort, fe as FetchEvent)
     expect(await res.text()).to.equal("success")
     console.log("HERE")
   })

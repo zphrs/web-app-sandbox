@@ -11,7 +11,6 @@ import {
   requestAsObject,
   proxiedRequestToFetchEvent,
 } from "./fetchConversions"
-import type { FetchEvent } from "./fetchEventPolyfill"
 export type ProxiedFetchRequest = {
   id: string | number
   params: Omit<FetchEventInit, "request"> & {
@@ -71,6 +70,7 @@ async function receiveProxiedResponse(
       },
       { signal: controller.signal }
     )
+    port.start()
   })
 }
 /**
@@ -86,6 +86,7 @@ export async function proxyFetchEvent(
   port: MessagePort,
   event: FetchEvent
 ): Promise<Response> {
+  console.log("Proxying ", event)
   const id = globalThis.crypto.randomUUID()
   port.postMessage({
     params: {
@@ -97,6 +98,12 @@ export async function proxyFetchEvent(
   } satisfies ProxiedFetchRequest)
   return receiveProxiedResponse(port, id)
 }
+
+export async function sendInitEvent(port: MessagePort) {
+  port.postMessage({
+    id: "init",
+  })
+}
 /**
  * Used on the client's main page (or within a worker) to handle requests
  * @param port
@@ -105,15 +112,25 @@ export async function proxyFetchEvent(
 export async function handleProxiedFetchEvent(
   port: MessagePort,
   onfetch: (event: FetchEvent) => void
-) {
-  port.addEventListener(
-    "message",
-    async (ev: MessageEvent<ProxiedFetchRequest>) => {
-      const fetchEvent = proxiedRequestToFetchEvent(ev.data)
-      fetchEvent.respondWith = async r => {
-        sendProxiedResponse(port, ev.data.id, await r)
-      }
-      onfetch(fetchEvent)
-    }
-  )
+): Promise<() => void> {
+  const controller = new AbortController()
+  await new Promise<void>(res => {
+    port.addEventListener(
+      "message",
+      async (ev: MessageEvent<ProxiedFetchRequest>) => {
+        if (ev.data.id == "init") {
+          res()
+          return
+        }
+        const fetchEvent = proxiedRequestToFetchEvent(ev.data)
+        fetchEvent.respondWith = async r => {
+          sendProxiedResponse(port, ev.data.id, await r)
+        }
+        onfetch(fetchEvent)
+      },
+      { signal: controller.signal }
+    )
+    port.start()
+  })
+  return controller.abort
 }

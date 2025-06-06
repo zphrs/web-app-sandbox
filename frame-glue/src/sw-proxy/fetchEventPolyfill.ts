@@ -4,7 +4,6 @@
 
 export class FetchEvent extends Event {
   clientId: string | undefined
-  replacesClientId: string | undefined
   resultingClientId: string | undefined
   request: Request
   handled: Promise<void>
@@ -29,20 +28,23 @@ export class FetchEvent extends Event {
     }
   }
 
+  get preloadResponse() {
+    return new Promise(res => res(undefined))
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  waitUntil(_p: Promise<unknown>) {
+    console.warn("The waitUntil function in the polyfill is a no-op")
+    return
+  }
+
   constructor(
     _type: string,
-    {
-      request,
-      clientId,
-      replacesClientId,
-      resultingClientId,
-      handled,
-    }: FetchEventInit
+    { request, clientId, resultingClientId, handled }: FetchEventInit
   ) {
     super("fetch" /* maybe should replace with type? */)
     this.request = request
     this.clientId = clientId ?? globalThis.crypto.randomUUID()
-    this.replacesClientId = replacesClientId
     this.resultingClientId = resultingClientId
     this.handled =
       handled ??

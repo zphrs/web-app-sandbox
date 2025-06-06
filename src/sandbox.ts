@@ -1,50 +1,61 @@
-import { domReplacementParentSetup, sleep } from "frame-glue"
+import {
+  domReplacementParentSetup,
+  sleep,
+  localStorageParentSetup,
+} from "frame-glue"
 import { SUBDOMAIN_WILDCARD_URL } from "./envs"
 import { getInitialIframeScript } from "./initialIframe"
-import { localStorageParentSetup } from "./overrideLocalStorage"
 
-function createCspMeta(): HTMLMetaElement {
-  let metaTag = document.createElement("meta")
-  metaTag.httpEquiv = "Content-Security-Policy"
-  // likely should use hashes at some point for script restrictions
-  // that way scripts can be versioned
-  metaTag.content =
-    "default-src 'unsafe-inline' 'self'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline' 'self'; frame-src 'none'; img-src 'self' data:;"
-  return metaTag
-}
-
-function createBase(basePath: string): HTMLBaseElement {
-  let base = document.createElement("base")
-  base.href = window.origin + "/" + basePath
-  console.log("Base", base.href)
-  return base
-}
-
-function composeDocument(html: string, appId: string): Document {
+function composeDocument(html: string): Document {
   let doc = document.implementation.createHTMLDocument()
   doc.documentElement.innerHTML = html
-  // doc.head.prepend(createBase(appId))
-  doc.head.prepend(createCspMeta())
+  // doc.head.prepend(createCspMeta())
   return doc
 }
 
 export async function createSandbox(
   parent: HTMLElement,
+  port: MessagePort,
   index?: string,
-  docId = "test",
-  appId = ""
+  docId = "test"
 ) {
   let iframe = document.createElement("iframe")
   let iframeScript = getInitialIframeScript(docId)
-  let initialDoc = composeDocument(iframeScript.outerHTML, appId)
+  let initialDoc = composeDocument(iframeScript.outerHTML)
 
-  iframe.src = SUBDOMAIN_WILDCARD_URL.replace("*", crypto.randomUUID())
+  iframe.src = SUBDOMAIN_WILDCARD_URL
   // iframe.srcdoc = initialDoc.documentElement.outerHTML
   iframe.sandbox.add("allow-scripts")
   iframe.sandbox.add("allow-same-origin")
   iframe.allow = "clipboard-write"
+  const iframeInited = new Promise<void>(res => {
+    window.addEventListener("message", e => {
+      if (e.data == "iframe inited") {
+        res()
+      }
+    })
+  })
   parent.appendChild(iframe)
+  await iframeInited
   const replaceDom = await domReplacementParentSetup(iframe)
+  // wait for response
+  const setPort = async (port: MessagePort) => {
+    const swInited = new Promise<void>((res, rej) => {
+      window.addEventListener(
+        "message",
+        e => {
+          if (e.data == "init-proxied-sw port inited") res()
+          else rej("wrong message type")
+        },
+        {
+          once: true,
+        }
+      )
+    })
+    iframe.contentWindow?.postMessage("init-proxied-sw port", "*", [port])
+    await swInited
+  }
+  await setPort(port)
   replaceDom(initialDoc.documentElement.outerHTML)
   await localStorageParentSetup(docId, iframe)
   let html =
@@ -57,7 +68,8 @@ export async function createSandbox(
 
     Hello world!
     `
-  let doc = composeDocument(html, appId)
+  let doc = composeDocument(html)
   replaceDom(doc.documentElement.outerHTML)
   // iframe.src = `data:text/html;base64,${btoa(doc.documentElement.outerHTML)}`
+  return { setPort }
 }

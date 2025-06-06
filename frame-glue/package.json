@@ -1,11 +1,14 @@
 {
   "name": "frame-glue",
-  "private": true,
-  "version": "0.0.0",
+  "private": false,
+  "sideEffects": false,
+  "version": "0.0.1",
   "type": "module",
+  "main": "lib/index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "watch": "vite build --watch",
     "preview": "vite preview",
     "test": "vitest"
   },

@@ -1,5 +1,3 @@
-import { SUBDOMAIN_WILDCARD_URL } from "./envs"
-
 export async function overrideLocalStorage(docId: string) {
   window.localStorage.clear()
   const {
@@ -7,23 +5,20 @@ export async function overrideLocalStorage(docId: string) {
     initialStore,
   }: { port: MessagePort; initialStore: { [key: string]: string } } =
     await new Promise(res => {
-      console.log("added msg event listener")
       window.addEventListener("message", ev => {
-        console.log("HERE", ev.data)
         if (ev.data != "localStorageInit") return
         const port = ev.ports[0]
         console.log("port")
         port.addEventListener("message", event => {
           const msgData = event.data
-          console.log(msgData)
           switch (msgData.call) {
             case "storageEvent":
               initialStore[msgData.key] = msgData.newValue
               window.dispatchEvent(
                 new StorageEvent("storage", {
                   ...msgData,
-                  url: `${SUBDOMAIN_WILDCARD_URL.origin}/${docId}`,
-                  storageArea: window.localStorage,
+                  url: `${origin}/${docId}`,
+                  //   storageArea: ls,
                 })
               )
               break
@@ -33,9 +28,10 @@ export async function overrideLocalStorage(docId: string) {
         })
         port.start()
       })
+      console.log("added msg event listener")
     })
   console.log("Got ls init")
-  const localStorage = new Proxy(initialStore as Storage, {
+  const ls = new Proxy(initialStore as Storage, {
     get(target, symbol) {
       if (symbol in target) {
         return target[symbol.toString()]
@@ -52,7 +48,6 @@ export async function overrideLocalStorage(docId: string) {
           }
         case "getItem":
           return (key: string) => {
-            console.log(target, key)
             return target[key]
           }
         case "removeItem":
@@ -103,7 +98,7 @@ export async function overrideLocalStorage(docId: string) {
     },
   })
   Object.defineProperty(window, "localStorage", {
-    value: localStorage,
+    value: ls,
     writable: true,
   })
   port.postMessage({
@@ -131,9 +126,9 @@ export async function localStorageParentSetup(
       db: IDBDatabase
     ]
   >((res, rej) => {
-    let initialLocalStorage: { [key: string]: string } = {}
+    const initialLocalStorage: { [key: string]: string } = {}
     const DBOpenRequest = window.indexedDB.open(docId)
-    DBOpenRequest.addEventListener("success", _ => {
+    DBOpenRequest.addEventListener("success", () => {
       const db = DBOpenRequest.result
       const objStore = db.transaction(docId).objectStore(docId)
       objStore.openCursor().onsuccess = function () {
@@ -154,7 +149,7 @@ export async function localStorageParentSetup(
     DBOpenRequest.addEventListener("blocked", () => {
       rej("Open request was blocked")
     })
-    DBOpenRequest.addEventListener("error", _ => {
+    DBOpenRequest.addEventListener("error", () => {
       rej(DBOpenRequest.error)
     })
   })
@@ -162,7 +157,7 @@ export async function localStorageParentSetup(
   const childInitialized = new Promise<void>(r => {
     res = r
   })
-  port.onmessage = event => {
+  port.onmessage = async event => {
     const objStore = db.transaction(docId, "readwrite").objectStore(docId)
     switch (event.data.call) {
       case "setItem":
