@@ -1,5 +1,6 @@
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
+import mkcert from "vite-plugin-mkcert"
 
 export default defineConfig({
   plugins: [
@@ -12,6 +13,7 @@ export default defineConfig({
     //     enabled: true,
     //   },
     // }),
+    mkcert(),
   ],
   server: {
     cors: true,

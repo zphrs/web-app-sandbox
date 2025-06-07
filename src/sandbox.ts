@@ -1,6 +1,5 @@
 import {
   domReplacementParentSetup,
-  sleep,
   localStorageParentSetup,
 } from "frame-glue"
 import { SUBDOMAIN_WILDCARD_URL } from "./envs"
@@ -33,7 +32,6 @@ export async function createSandbox(
 
   iframe.src =
     SUBDOMAIN_WILDCARD_URL + "/pg-doc-id/" + encodeURIComponent(docId)
-  // iframe.srcdoc = initialDoc.documentElement.outerHTML
   iframe.sandbox.add("allow-scripts")
   iframe.sandbox.add("allow-same-origin")
   iframe.allow = "clipboard-write"

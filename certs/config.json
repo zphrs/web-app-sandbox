@@ -1,0 +1,15 @@
+{
+  "record": {
+    "hosts": [
+      "localhost",
+      "127.0.0.1",
+      "192.168.0.225",
+      "169.254.60.102"
+    ],
+    "hash": {
+      "key": "022eb1d84e132dc7bcffd9b4f3152bff0837c6061d7faa70bf0fe6600548afdf",
+      "cert": "5d77a3567282039911b39e2051510616b5cdc7b0fa43a86f315a16218453a04c"
+    }
+  },
+  "configFilePath": "/Users/zphrs/Documents/programming/plexigraph/sandbox/certs/config.json"
+}

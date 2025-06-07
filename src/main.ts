@@ -21,23 +21,23 @@ async function init() {
   const { setPort } = await createSandbox(parent, port1, doc, "excalidraw")
   const w = worker
   window.addEventListener("message", async e => {
-    if (e.data == "iframe refresh port") {
-      const { port1, port2 } = new MessageChannel()
-      w.terminate()
-      const worker = new Worker(new URL("./proxy-sw/sw.ts", import.meta.url), {
-        type: "module",
-      })
-      const initDone = new Promise<void>(res => {
-        worker.addEventListener("message", e => {
-          console.log(e)
-          if (e.data == "proxy-sw init done") res()
-        })
-      })
+    if (e.data != "iframe refresh port") return
 
-      worker.postMessage({ appId: "excalidraw" }, [port2])
-      await initDone
-      setPort(port1)
-    }
+    const { port1, port2 } = new MessageChannel()
+    w.terminate()
+    const worker = new Worker(new URL("./proxy-sw/sw.ts", import.meta.url), {
+      type: "module",
+    })
+    const initDone = new Promise<void>(res => {
+      worker.addEventListener("message", e => {
+        console.log(e)
+        if (e.data == "proxy-sw init done") res()
+      })
+    })
+
+    worker.postMessage({ appId: "excalidraw" }, [port2])
+    await initDone
+    setPort(port1)
   })
 }
 init()

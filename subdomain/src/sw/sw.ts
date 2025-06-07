@@ -64,11 +64,16 @@ self.addEventListener("fetch", event => {
     (async () => {
       const url = new URL(event.request.url)
       if (
+        event.request.method == "GET" &&
         url.origin == self.origin &&
         url.pathname.startsWith("/pg-doc-id/") &&
         url.pathname.split("/").filter(v => v != "").length == 2
       ) {
-        return await fetch(event.request)
+        if (url.search.length == 0 && (await event.request.text()) == "") {
+          return await fetch(event.request)
+        } else {
+          throw new Error("invalid request")
+        }
       }
       let mainSwPromise = mainSwPromises.get(event.clientId)
       if (!mainSwPromise) {

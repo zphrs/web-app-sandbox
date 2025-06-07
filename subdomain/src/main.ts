@@ -4,8 +4,14 @@ import {
   overrideLocalStorage,
 } from "frame-glue"
 
-domReplacement()
+window.addEventListener("beforeunload", e => {
+  console.log("HERE")
+  e.preventDefault()
+  e.stopImmediatePropagation()
+  e.returnValue = "No navigation allowed"
+})
 
+domReplacement()
 overrideIndexDB()
 overrideLocalStorage(new URL(origin).pathname.slice(1))
 
@@ -75,4 +81,13 @@ window.addEventListener("message", async (event: MessageEvent<any>) => {
   }
 })
 
-window.parent.postMessage("iframe inited", "*")
+new Promise(res => {
+  const btn = document.createElement("button")
+  btn.innerText = "Click to load app"
+  btn.onclick = res
+  document.body.append(btn)
+}).then(() => {
+  // only tell parent to start replacing dom once
+  // button has been clicked
+  window.parent.postMessage("iframe inited", "*")
+})

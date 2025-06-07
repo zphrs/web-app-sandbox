@@ -12,7 +12,6 @@ self.addEventListener("message", async (event: MessageEvent<InitParams>) => {
   }
   const { appId } = event.data
   self.postMessage("proxy-sw init done")
-
   handleProxiedFetchEvent(event.ports[0], event => {
     // TODO: show popup, possibly forward event too
     const initUrl = new URL(event.request.url)
@@ -21,12 +20,9 @@ self.addEventListener("message", async (event: MessageEvent<InitParams>) => {
       console.log("Blocking external request")
       event.respondWith(
         (async () =>
-          new Response(
-            "Blocked as cross-origin requests are not guaranteed to be secure",
-            {
-              status: 500,
-            }
-          ))()
+          new Response("Blocked cross-origin request", {
+            status: 403,
+          }))()
       )
       return
     }
