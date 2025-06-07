@@ -1,6 +1,12 @@
-import { domReplacement, overrideLocalStorage } from "frame-glue"
+import {
+  domReplacement,
+  overrideIndexDB,
+  overrideLocalStorage,
+} from "frame-glue"
 
 domReplacement()
+
+overrideIndexDB()
 overrideLocalStorage(new URL(origin).pathname.slice(1))
 
 function refreshPort() {
@@ -32,10 +38,12 @@ async function initSwProxy(port: MessagePort) {
   }
   const reg =
     existingReg ??
-    // (await navigator.serviceWorker.register("/sw.js?dev"))
     (await navigator.serviceWorker.register(
       import.meta.env.MODE === "production" ? "/sw.js" : "/dev-sw.js?dev-sw",
-      { type: import.meta.env.MODE === "production" ? "classic" : "module" }
+      {
+        type: import.meta.env.MODE === "production" ? "classic" : "module",
+        scope: "/",
+      }
     ))
   if (navigator.serviceWorker.controller && reg.active) {
     onInstalled(navigator.serviceWorker.controller)

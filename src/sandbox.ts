@@ -13,6 +13,14 @@ function composeDocument(html: string): Document {
   return doc
 }
 
+/**
+ *
+ * @param parent
+ * @param port
+ * @param index
+ * @param docId
+ * @returns
+ */
 export async function createSandbox(
   parent: HTMLElement,
   port: MessagePort,
@@ -23,7 +31,8 @@ export async function createSandbox(
   let iframeScript = getInitialIframeScript(docId)
   let initialDoc = composeDocument(iframeScript.outerHTML)
 
-  iframe.src = SUBDOMAIN_WILDCARD_URL
+  iframe.src =
+    SUBDOMAIN_WILDCARD_URL + "/pg-doc-id/" + encodeURIComponent(docId)
   // iframe.srcdoc = initialDoc.documentElement.outerHTML
   iframe.sandbox.add("allow-scripts")
   iframe.sandbox.add("allow-same-origin")

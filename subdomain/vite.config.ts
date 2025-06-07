@@ -28,6 +28,9 @@ export default defineConfig({
   preview: {
     cors: true,
     port: 5273,
+    proxy: {
+      "^pg-doc-id/.*": "http://localhost:5273/index.html",
+    },
     allowedHosts: [".localhost"],
   },
 })

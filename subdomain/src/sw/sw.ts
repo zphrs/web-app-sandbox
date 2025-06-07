@@ -21,15 +21,7 @@ self.addEventListener("activate", e => {
   // makes service worker activate immediately for all requests going forward
   // console.log("activating")
   // if (self.registration.installing)
-  e.waitUntil(
-    (async () => {
-      try {
-        await self.clients.claim()
-      } catch (err) {
-        console.error("WHOOPS", err)
-      }
-    })()
-  )
+  e.waitUntil(self.clients.claim())
   // else {
   console.log(self.registration)
   // }
@@ -71,7 +63,11 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     (async () => {
       const url = new URL(event.request.url)
-      if (url.origin == self.origin && url.pathname == "/") {
+      if (
+        url.origin == self.origin &&
+        url.pathname.startsWith("/pg-doc-id/") &&
+        url.pathname.split("/").filter(v => v != "").length == 2
+      ) {
         return await fetch(event.request)
       }
       let mainSwPromise = mainSwPromises.get(event.clientId)
