@@ -419,11 +419,42 @@ async function clearIdb() {
 async function overrideIndexDB() {
   await clearIdb();
 }
+function overrideCookie() {
+  clearCookies();
+}
+function expireAllCookies(name, paths) {
+  const expires = (/* @__PURE__ */ new Date(0)).toUTCString();
+  document.cookie = name + "=; expires=" + expires;
+  for (let i = 0, l = paths.length; i < l; i++) {
+    document.cookie = name + "=; path=" + paths[i] + "; expires=" + expires;
+  }
+}
+function expireActiveCookies(name) {
+  const pathname = location.pathname.replace(/\/$/, ""), segments = pathname.split("/"), paths = [];
+  for (let i = 0, l = segments.length; i < l; i++) {
+    const path = segments.slice(0, i + 1).join("/");
+    paths.push(path);
+    paths.push(path + "/");
+  }
+  expireAllCookies(name, paths);
+}
+async function clearCookies() {
+  const cookies = document.cookie.split(";").map((s) => s.trim());
+  for (const cookie of cookies) {
+    const name = cookie.split("=")[0];
+    expireActiveCookies(name);
+  }
+  if (document.cookie.length != 0) {
+    throw new Error("not all cookies were cleared! Cookie: " + document.cookie);
+  }
+}
 export {
+  clearCookies,
   domReplacement,
   domReplacementParentSetup,
   handleProxiedFetchEvent,
   localStorageParentSetup,
+  overrideCookie,
   overrideIndexDB,
   overrideLocalStorage,
   proxyFetchEvent,

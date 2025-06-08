@@ -15,7 +15,20 @@ self.addEventListener("message", async (event: MessageEvent<InitParams>) => {
   handleProxiedFetchEvent(event.ports[0], event => {
     // TODO: show popup, possibly forward event too
     const initUrl = new URL(event.request.url)
-    console.log(event.request)
+    if (
+      initUrl
+        .toString()
+        .startsWith("https://esm.sh/@excalidraw/excalidraw/dist/prod/")
+    ) {
+      const newUrl = `${origin}/${appId}/${initUrl.pathname
+        .split("/")
+        .slice(5)
+        .join("/")}`
+      console.log(newUrl)
+      const req = new Request(newUrl, event.request)
+      event.respondWith(fetch(req))
+      return
+    }
     if (initUrl.origin != new URL(SUBDOMAIN_WILDCARD_URL).origin) {
       console.log("Blocking external request")
       event.respondWith(
@@ -27,9 +40,8 @@ self.addEventListener("message", async (event: MessageEvent<InitParams>) => {
       return
     }
     const newUrl = new URL(`${origin}/${appId}${initUrl.pathname}`)
-    console.log("NEW", newUrl)
+    console.log("NEW", newUrl.toString())
     const req = new Request(newUrl, event.request)
-    console.log("YAY", req)
     event.respondWith(fetch(req))
   })
 })

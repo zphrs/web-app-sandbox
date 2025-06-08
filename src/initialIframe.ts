@@ -1,4 +1,4 @@
-import { overrideCookie } from "./overrideCookie"
+import { overrideCookie } from "frame-glue"
 import { overrideLocalStorage } from "./overrideLocalStorage"
 export function getInitialIframeScript(docId: string): HTMLScriptElement {
   const out = document.createElement("script")

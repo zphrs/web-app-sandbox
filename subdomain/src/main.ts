@@ -1,18 +1,13 @@
 import {
   domReplacement,
+  overrideCookie,
   overrideIndexDB,
   overrideLocalStorage,
 } from "frame-glue"
 
-window.addEventListener("beforeunload", e => {
-  console.log("HERE")
-  e.preventDefault()
-  e.stopImmediatePropagation()
-  e.returnValue = "No navigation allowed"
-})
-
 domReplacement()
 overrideIndexDB()
+overrideCookie()
 overrideLocalStorage(new URL(origin).pathname.slice(1))
 
 function refreshPort() {
@@ -80,14 +75,4 @@ window.addEventListener("message", async (event: MessageEvent<any>) => {
     })
   }
 })
-
-new Promise(res => {
-  const btn = document.createElement("button")
-  btn.innerText = "Click to load app"
-  btn.onclick = res
-  document.body.append(btn)
-}).then(() => {
-  // only tell parent to start replacing dom once
-  // button has been clicked
-  window.parent.postMessage("iframe inited", "*")
-})
+window.parent.postMessage("iframe inited", "*")
