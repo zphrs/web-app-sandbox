@@ -1,7 +1,4 @@
-import {
-  domReplacementParentSetup,
-  localStorageParentSetup,
-} from "frame-glue"
+import { domReplacementParentSetup, localStorageParentSetup } from "frame-glue"
 import { SUBDOMAIN_WILDCARD_URL } from "./envs"
 import { getInitialIframeScript } from "./initialIframe"
 
@@ -35,6 +32,7 @@ export async function createSandbox(
   iframe.sandbox.add("allow-scripts")
   iframe.sandbox.add("allow-same-origin")
   iframe.allow = "clipboard-write"
+  iframe.referrerPolicy = "no-referrer"
   const iframeInited = new Promise<void>(res => {
     window.addEventListener("message", e => {
       if (e.data == "iframe inited") {

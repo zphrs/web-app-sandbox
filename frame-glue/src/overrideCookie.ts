@@ -1,10 +1,11 @@
 export function overrideCookie() {
   clearCookies()
   Object.defineProperty(document, "cookie", {
-    value: "",
-    writable: true,
     set() {
-      console.warn("Setting cookies is not supported")
+      console.warn("Setting cookies is a no-op in sandboxed mode")
+    },
+    get() {
+      return ""
     },
   })
 }

@@ -421,6 +421,15 @@ async function overrideIndexDB() {
 }
 function overrideCookie() {
   clearCookies();
+  Object.defineProperty(document, "cookie", {
+    set() {
+      console.warn("Setting cookies is not supported");
+      return false;
+    },
+    get() {
+      return "";
+    }
+  });
 }
 function expireAllCookies(name, paths) {
   const expires = (/* @__PURE__ */ new Date(0)).toUTCString();
