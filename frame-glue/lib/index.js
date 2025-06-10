@@ -416,15 +416,49 @@ async function clearIdb() {
     dbs.map((db) => db.name && window.indexedDB.deleteDatabase(db.name))
   );
 }
+async function getMessagePort(portName) {
+  return new Promise((res) => {
+    const { signal, abort } = new AbortController();
+    self.addEventListener(
+      "message",
+      (e) => {
+        if (e.data == portName) {
+          e.ports[0].postMessage(`${portName} inited`);
+          res(e.ports[0]);
+          e.stopImmediatePropagation();
+          abort();
+        }
+      },
+      { signal }
+    );
+  });
+}
+async function postMessagePort(portName, window2, port) {
+  window2.postMessage(portName, "*", [port]);
+  return new Promise((res) => {
+    const { signal, abort } = new AbortController();
+    port.addEventListener(
+      "message",
+      (e) => {
+        if (e.data == `${portName} inited`) {
+          res();
+          e.stopImmediatePropagation();
+          abort();
+        }
+      },
+      { signal }
+    );
+  });
+}
 async function overrideIndexDB() {
-  await clearIdb();
+  clearIdb();
+  delete window.indexedDB;
 }
 function overrideCookie() {
   clearCookies();
   Object.defineProperty(document, "cookie", {
     set() {
-      console.warn("Setting cookies is not supported");
-      return false;
+      console.warn("Setting cookies is a no-op in sandboxed mode");
     },
     get() {
       return "";
@@ -461,11 +495,13 @@ export {
   clearCookies,
   domReplacement,
   domReplacementParentSetup,
+  getMessagePort,
   handleProxiedFetchEvent,
   localStorageParentSetup,
   overrideCookie,
   overrideIndexDB,
   overrideLocalStorage,
+  postMessagePort,
   proxyFetchEvent,
   sendInitEvent,
   sleep

@@ -23,7 +23,7 @@
     <!-- FIXME: remove font-src -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src * 'unsafe-inline' 'unsafe-eval' data:; child-src 'none'; frame-src 'none'; worker-src %VITE_SUBDOMAIN_WILDCARD_URL%/sw.js; font-src *;"
+      content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; child-src 'none'; frame-src 'none'; worker-src %VITE_SUBDOMAIN_WILDCARD_URL%/sw.js; font-src *; webrtc 'block'"
     />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
