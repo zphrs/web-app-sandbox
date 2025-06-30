@@ -452,7 +452,6 @@ async function postMessagePort(portName, window2, port) {
 }
 async function overrideIndexDB() {
   clearIdb();
-  delete window.indexedDB;
 }
 function overrideCookie() {
   clearCookies();

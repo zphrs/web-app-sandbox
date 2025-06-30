@@ -1,7 +1,10 @@
 import "./style.css"
 import { createSandbox } from "./sandbox.ts"
 
-async function init(appId: string = "bangle-io", docId: string = "excalidraw") {
+async function init(
+  appId: string = "excalidraw",
+  docId: string = "excalidraw"
+) {
   let parent = document.querySelector<HTMLDivElement>("#app")!
   let doc = await (await fetch(`/${appId}/index.html`)).text()
   const { port1, port2 } = new MessageChannel()

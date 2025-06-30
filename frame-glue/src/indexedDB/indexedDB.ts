@@ -50,8 +50,8 @@ export async function postMessagePort(
 
 export async function overrideIndexDB() {
   clearIdb()
-  // @ts-expect-error ts(2790)
-  delete window.indexedDB
+  // // @ts-expect-error ts(2790)
+  // delete window.indexedDB
 }
 
 // export async function overrideIndexDB() {
